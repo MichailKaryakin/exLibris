@@ -1,7 +1,7 @@
 package org.example.exlibris.user.service;
 
 import org.example.exlibris.security.service.JwtService;
-import org.example.exlibris.user.role.Role;
+import org.example.exlibris.user.enums.Role;
 import org.example.exlibris.user.entity.User;
 import org.example.exlibris.user.repository.UserRepository;
 import org.example.exlibris.user.dto.*;

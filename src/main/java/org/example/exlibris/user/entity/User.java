@@ -2,7 +2,7 @@ package org.example.exlibris.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.exlibris.user.role.Role;
+import org.example.exlibris.user.enums.Role;
 
 import java.time.LocalDateTime;
 
