@@ -1,4 +1,4 @@
-package org.example.exlibris.security.service;
+package org.example.exlibris.security.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -42,12 +42,16 @@ public class JwtService {
                 .compact();
     }
 
-    public boolean isTokenValid(String token, UserDetails user) {
-        return extractUsername(token).equals(user.getUsername()) && !isExpired(token);
+    public boolean isRefreshTokenValid(String token, UserDetails user) {
+        return extractUsername(token).equals(user.getUsername()) && isNotExpired(token);
     }
 
-    private boolean isExpired(String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
+    public boolean isTokenValid(String token, UserDetails user) {
+        return extractUsername(token).equals(user.getUsername()) && isNotExpired(token);
+    }
+
+    private boolean isNotExpired(String token) {
+        return !extractAllClaims(token).getExpiration().before(new Date());
     }
 
     private Claims extractAllClaims(String token) {

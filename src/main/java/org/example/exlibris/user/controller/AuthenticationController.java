@@ -21,4 +21,9 @@ public class AuthenticationController {
     public LoginResponse login(@RequestBody LoginRequest request) {
         return service.login(request);
     }
+
+    @PostMapping("/refresh")
+    public RefreshResponse login(@RequestBody RefreshRequest request) {
+        return service.refresh(request.getRefreshToken());
+    }
 }

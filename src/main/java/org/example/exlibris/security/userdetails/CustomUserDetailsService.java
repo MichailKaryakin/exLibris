@@ -1,4 +1,4 @@
-package org.example.exlibris.security.service;
+package org.example.exlibris.security.userdetails;
 
 import lombok.NonNull;
 import org.example.exlibris.user.entity.User;
