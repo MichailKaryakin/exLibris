@@ -2,7 +2,11 @@ package org.example.exlibris.book.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.exlibris.reading.entity.ReadingEntry;
 import org.example.exlibris.user.entity.User;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "books")
@@ -17,9 +21,7 @@ public class Book {
     private Long id;
 
     private String title;
-
     private String author;
-
     private Integer year;
 
     @Column(length = 2000)
@@ -28,4 +30,11 @@ public class Book {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToMany(
+            mappedBy = "book",
+            cascade = CascadeType.REMOVE,
+            orphanRemoval = true
+    )
+    private List<ReadingEntry> readingEntries = new ArrayList<>();
 }

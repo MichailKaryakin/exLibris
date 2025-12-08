@@ -16,7 +16,10 @@ public class ReadingController {
     private final ReadingService service;
 
     @PostMapping("/start/{bookId}")
-    public ReadingEntry start(Authentication auth, @PathVariable Long bookId) {
+    public ReadingEntry start(
+            Authentication auth,
+            @PathVariable Long bookId
+    ) {
         return service.startReading(auth.getName(), bookId);
     }
 

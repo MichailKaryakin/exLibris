@@ -1,6 +1,8 @@
 package org.example.exlibris.common.exception;
 
 import lombok.NonNull;
+import org.example.exlibris.book.exception.AccessDeniedBookOperationException;
+import org.example.exlibris.book.exception.BookNotFoundException;
 import org.example.exlibris.common.dto.ErrorResponse;
 import org.example.exlibris.user.exception.EmailAlreadyUsedException;
 import org.springframework.http.*;
@@ -44,5 +46,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse("Internal server error"));
+    }
+
+    @ExceptionHandler(BookNotFoundException.class)
+    public ResponseEntity<@NonNull ErrorResponse> handleBookNotFound(BookNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedBookOperationException.class)
+    public ResponseEntity<@NonNull ErrorResponse> handleBookAccessDenied(AccessDeniedBookOperationException e) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(e.getMessage()));
     }
 }
