@@ -77,6 +77,10 @@ public class BookService {
         Book book = bookRepository.findByIdAndUserId(bookId, user.getId())
                 .orElseThrow(() -> new BookNotFoundException("Book not found"));
 
+        if (!book.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedBookOperationException("You cannot update this book");
+        }
+
         if (request.title() != null) book.setTitle(request.title());
         if (request.description() != null) book.setDescription(request.description());
         if (request.year() != null) book.setYear(request.year());
