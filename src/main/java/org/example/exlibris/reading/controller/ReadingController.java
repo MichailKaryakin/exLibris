@@ -1,7 +1,7 @@
 package org.example.exlibris.reading.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.exlibris.reading.entity.ReadingEntry;
+import org.example.exlibris.reading.dto.ReadingResponse;
 import org.example.exlibris.reading.service.ReadingService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ public class ReadingController {
     private final ReadingService service;
 
     @PostMapping("/start/{bookId}")
-    public ReadingEntry start(
+    public ReadingResponse start(
             Authentication auth,
             @PathVariable Long bookId
     ) {
@@ -24,7 +24,7 @@ public class ReadingController {
     }
 
     @PostMapping("/finish/{readingId}")
-    public ReadingEntry finish(
+    public ReadingResponse finish(
             @PathVariable Long readingId,
             @RequestParam Integer score,
             @RequestParam(required = false) String notes
@@ -33,7 +33,12 @@ public class ReadingController {
     }
 
     @GetMapping("/list")
-    public List<ReadingEntry> list(Authentication auth) {
+    public List<ReadingResponse> list(Authentication auth) {
         return service.getUserReading(auth.getName());
+    }
+
+    @GetMapping
+    public List<ReadingResponse> getCurrentReading(Authentication auth) {
+        return service.getCurrentReading(auth.getName());
     }
 }

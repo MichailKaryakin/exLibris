@@ -1,8 +1,10 @@
 package org.example.exlibris.reading.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.exlibris.book.dto.BookResponse;
 import org.example.exlibris.book.entity.Book;
 import org.example.exlibris.book.repository.BookRepository;
+import org.example.exlibris.reading.dto.ReadingResponse;
 import org.example.exlibris.reading.entity.ReadingEntry;
 import org.example.exlibris.reading.enums.ReadingStatus;
 import org.example.exlibris.reading.repository.ReadingRepository;
@@ -21,29 +23,59 @@ public class ReadingService {
     private final UserRepository userRepo;
     private final BookRepository bookRepo;
 
-    public ReadingEntry startReading(String email, Long bookId) {
+    private ReadingResponse mapToResponse(ReadingEntry entry) {
+        Book book = entry.getBook();
+        BookResponse bookResponse = new BookResponse(
+                book.getId(),
+                book.getTitle(),
+                book.getAuthor(),
+                book.getYear(),
+                book.getDescription()
+        );
+
+        return new ReadingResponse(
+                entry.getId(),
+                bookResponse,
+                entry.getStatus(),
+                entry.getScore(),
+                entry.getFinishedAt(),
+                entry.getNotes()
+        );
+    }
+
+    public ReadingResponse startReading(String email, Long bookId) {
         User user = userRepo.findByEmail(email).orElseThrow();
         Book book = bookRepo.findById(bookId).orElseThrow();
 
-        ReadingEntry reading = ReadingEntry.builder()
+        ReadingEntry entry = ReadingEntry.builder()
                 .user(user)
                 .book(book)
                 .status(ReadingStatus.READING)
                 .build();
 
-        return readingRepo.save(reading);
+        readingRepo.save(entry);
+        return mapToResponse(entry);
     }
 
-    public ReadingEntry finishReading(Long readingId, Integer score, String notes) {
-        ReadingEntry r = readingRepo.findById(readingId).orElseThrow();
-        r.setStatus(ReadingStatus.FINISHED);
-        r.setScore(score);
-        r.setNotes(notes);
-        r.setFinishedAt(LocalDateTime.now());
-        return readingRepo.save(r);
+    public ReadingResponse finishReading(Long readingId, Integer score, String notes) {
+        ReadingEntry entry = readingRepo.findById(readingId).orElseThrow();
+        entry.setStatus(ReadingStatus.FINISHED);
+        entry.setScore(score);
+        entry.setNotes(notes);
+        entry.setFinishedAt(LocalDateTime.now());
+
+        readingRepo.save(entry);
+
+        return mapToResponse(entry);
     }
 
-    public List<ReadingEntry> getUserReading(String email) {
-        return readingRepo.findAllByUserEmail(email);
+    public List<ReadingResponse> getUserReading(String email) {
+        List<ReadingEntry> entryList = readingRepo.findAllByUserEmail(email);
+        return entryList.stream().map(this::mapToResponse).toList();
+    }
+
+    public List<ReadingResponse> getCurrentReading(String email) {
+        List<ReadingEntry> entryList = readingRepo.findAllByUserEmailAndStatus(email, ReadingStatus.READING);
+        return entryList.stream().map(this::mapToResponse).toList();
     }
 }
