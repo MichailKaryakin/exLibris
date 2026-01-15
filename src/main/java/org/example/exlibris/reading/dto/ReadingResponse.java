@@ -16,4 +16,5 @@ public class ReadingResponse {
     private Integer score;
     private LocalDateTime finishedAt;
     private String notes;
+    private Integer currentPage;
 }

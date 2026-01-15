@@ -36,4 +36,6 @@ public class ReadingEntry {
     private LocalDateTime finishedAt;
 
     private String notes;
+
+    private Integer currentPage;
 }

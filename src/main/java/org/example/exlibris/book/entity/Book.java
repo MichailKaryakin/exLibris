@@ -23,6 +23,7 @@ public class Book {
     private String title;
     private String author;
     private Integer year;
+    private Integer totalPages;
 
     @Column(length = 2000)
     private String description;

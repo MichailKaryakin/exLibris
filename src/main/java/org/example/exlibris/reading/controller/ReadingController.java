@@ -15,6 +15,21 @@ public class ReadingController {
 
     private final ReadingService service;
 
+    @GetMapping("/list")
+    public List<ReadingResponse> list(Authentication auth) {
+        return service.getUserReading(auth.getName());
+    }
+
+    @GetMapping("/list-now-reading")
+    public List<ReadingResponse> getCurrentReading(Authentication auth) {
+        return service.getCurrentReading(auth.getName());
+    }
+
+    @GetMapping("/reading-history")
+    public List<ReadingResponse> getReadingHistory(Authentication auth) {
+        return service.getReadingHistory(auth.getName());
+    }
+
     @PostMapping("/start/{bookId}")
     public ReadingResponse start(
             Authentication auth,
@@ -32,13 +47,11 @@ public class ReadingController {
         return service.finishReading(readingId, score, notes);
     }
 
-    @GetMapping("/list")
-    public List<ReadingResponse> list(Authentication auth) {
-        return service.getUserReading(auth.getName());
-    }
-
-    @GetMapping
-    public List<ReadingResponse> getCurrentReading(Authentication auth) {
-        return service.getCurrentReading(auth.getName());
+    @PutMapping("/update-progress/{readingId}")
+    public ReadingResponse updateProgress(
+            @PathVariable Long readingId,
+            @RequestParam Integer pageNumber
+    ) {
+        return service.updateProgress(readingId, pageNumber);
     }
 }

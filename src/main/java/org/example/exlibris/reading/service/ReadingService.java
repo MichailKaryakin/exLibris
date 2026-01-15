@@ -13,6 +13,7 @@ import org.example.exlibris.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -39,7 +40,8 @@ public class ReadingService {
                 entry.getStatus(),
                 entry.getScore(),
                 entry.getFinishedAt(),
-                entry.getNotes()
+                entry.getNotes(),
+                entry.getCurrentPage()
         );
     }
 
@@ -77,5 +79,22 @@ public class ReadingService {
     public List<ReadingResponse> getCurrentReading(String email) {
         List<ReadingEntry> entryList = readingRepo.findAllByUserEmailAndStatus(email, ReadingStatus.READING);
         return entryList.stream().map(this::mapToResponse).toList();
+    }
+
+    public ReadingResponse updateProgress(Long readingId, Integer pageNumber) {
+        ReadingEntry entry = readingRepo.findById(readingId).orElseThrow();
+        entry.setCurrentPage(pageNumber);
+
+        readingRepo.save(entry);
+
+        return mapToResponse(entry);
+    }
+
+    public List<ReadingResponse> getReadingHistory(String email) {
+        List<ReadingEntry> entryList = readingRepo.findAllByUserEmail(email);
+        return entryList.stream()
+                .map(this::mapToResponse)
+                .sorted(Comparator.comparing(ReadingResponse::getFinishedAt))
+                .toList();
     }
 }
