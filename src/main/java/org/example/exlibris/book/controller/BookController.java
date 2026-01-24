@@ -1,64 +1,66 @@
 package org.example.exlibris.book.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.exlibris.book.dto.BookRequest;
+import org.example.exlibris.book.dto.BookCreateRequest;
 import org.example.exlibris.book.dto.BookResponse;
+import org.example.exlibris.book.dto.BookUpdateRequest;
 import org.example.exlibris.book.service.BookService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
+@Validated
 public class BookController {
 
     private final BookService bookService;
 
-    @PostMapping("/create")
-    public BookResponse createBook(
-            @RequestBody BookRequest request,
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public BookResponse create(
+            @Valid @RequestBody BookCreateRequest request,
             Principal principal
     ) {
-        return bookService.createBook(request, principal.getName());
+        return bookService.create(request, principal.getName());
     }
 
-    @GetMapping("/get")
-    public List<BookResponse> getUserBooks(Principal principal) {
-        return bookService.getBooksForUser(principal.getName());
-    }
-
-    @GetMapping("/get-title/{title}")
-    public List<BookResponse> getUserBooksByTitle(
-            Principal principal,
-            @PathVariable String title
-    ) {
-        return bookService.getBooksForUserByTitle(principal.getName(), title);
-    }
-
-    @GetMapping("/get-author/{author}")
-    public List<BookResponse> getUserBooksByAuthor(
-            Principal principal,
-            @PathVariable String author
-    ) {
-        return bookService.getBooksForUserByAuthor(principal.getName(), author);
-    }
-
-    @PutMapping("/update/{bookId}")
-    public BookResponse updateBook(
-            @PathVariable Long bookId,
-            @RequestBody BookRequest request,
+    @GetMapping
+    public Page<BookResponse> getAll(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            Pageable pageable,
             Principal principal
     ) {
-        return bookService.updateBook(bookId, request, principal.getName());
+        return bookService.getAll(
+                principal.getName(),
+                title,
+                author,
+                pageable
+        );
     }
 
-    @DeleteMapping("/delete/{bookId}")
-    public void deleteBook(
-            @PathVariable Long bookId,
+    @PutMapping("/{id}")
+    public BookResponse update(
+            @PathVariable Long id,
+            @Valid @RequestBody BookUpdateRequest request,
             Principal principal
     ) {
-        bookService.deleteBook(bookId, principal.getName());
+        return bookService.update(id, request, principal.getName());
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(
+            @PathVariable Long id,
+            Principal principal
+    ) {
+        bookService.delete(id, principal.getName());
     }
 }

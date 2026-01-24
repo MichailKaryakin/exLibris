@@ -31,6 +31,7 @@ public class ReadingService {
                 book.getTitle(),
                 book.getAuthor(),
                 book.getYear(),
+                book.getTotalPages(),
                 book.getDescription()
         );
 

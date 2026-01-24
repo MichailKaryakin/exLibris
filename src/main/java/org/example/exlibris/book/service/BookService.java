@@ -1,34 +1,36 @@
 package org.example.exlibris.book.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.exlibris.book.dto.BookRequest;
+import org.example.exlibris.book.dto.BookCreateRequest;
 import org.example.exlibris.book.dto.BookResponse;
+import org.example.exlibris.book.dto.BookUpdateRequest;
 import org.example.exlibris.book.entity.Book;
-import org.example.exlibris.book.exception.AccessDeniedBookOperationException;
 import org.example.exlibris.book.exception.BookNotFoundException;
 import org.example.exlibris.book.repository.BookRepository;
 import org.example.exlibris.user.entity.User;
 import org.example.exlibris.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BookService {
 
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
 
-    public BookResponse createBook(BookRequest request, String username) {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    public BookResponse create(BookCreateRequest request, String username) {
+        User user = getUser(username);
 
         Book book = Book.builder()
                 .title(request.title())
                 .author(request.author())
                 .year(request.year())
+                .totalPages(request.totalPages())
                 .description(request.description())
                 .user(user)
                 .build();
@@ -36,28 +38,61 @@ public class BookService {
         return toResponse(bookRepository.save(book));
     }
 
-    public List<BookResponse> getBooksForUser(String username) {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    public Page<BookResponse> getAll(
+            String username,
+            String title,
+            String author,
+            Pageable pageable
+    ) {
+        User user = getUser(username);
 
-        return bookRepository.findAllByUserId(user.getId())
-                .stream().map(this::toResponse).toList();
+        Page<Book> books;
+
+        if (title != null) {
+            books = bookRepository.findAllByUserIdAndTitleContainingIgnoreCase(
+                    user.getId(), title, pageable);
+        } else if (author != null) {
+            books = bookRepository.findAllByUserIdAndAuthorContainingIgnoreCase(
+                    user.getId(), author, pageable);
+        } else {
+            books = bookRepository.findAllByUserId(user.getId(), pageable);
+        }
+
+        return books.map(this::toResponse);
     }
 
-    public List<BookResponse> getBooksForUserByTitle(String username, String title) {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    public BookResponse update(
+            Long bookId,
+            BookUpdateRequest request,
+            String username
+    ) {
+        User user = getUser(username);
 
-        return bookRepository.findAllByUserIdAndTitle(user.getId(), title)
-                .stream().map(this::toResponse).toList();
+        Book book = bookRepository.findByIdAndUserId(bookId, user.getId())
+                .orElseThrow(() -> new BookNotFoundException("Book not found"));
+
+        if (request.title() != null) book.setTitle(request.title());
+        if (request.author() != null) book.setAuthor(request.author());
+        if (request.year() != null) book.setYear(request.year());
+        if (request.totalPages() != null) book.setTotalPages(request.totalPages());
+        if (request.description() != null) book.setDescription(request.description());
+
+        return toResponse(book);
     }
 
-    public List<BookResponse> getBooksForUserByAuthor(String username, String author) {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    public void delete(Long bookId, String username) {
+        User user = getUser(username);
 
-        return bookRepository.findAllByUserIdAndAuthor(user.getId(), author)
-                .stream().map(this::toResponse).toList();
+        Book book = bookRepository.findByIdAndUserId(bookId, user.getId())
+                .orElseThrow(() -> new BookNotFoundException("Book not found"));
+
+        bookRepository.delete(book);
+    }
+
+    private User getUser(String username) {
+        return userRepository.findByEmail(username)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found: " + username));
     }
 
     private BookResponse toResponse(Book book) {
@@ -66,40 +101,8 @@ public class BookService {
                 book.getTitle(),
                 book.getAuthor(),
                 book.getYear(),
+                book.getTotalPages(),
                 book.getDescription()
         );
-    }
-
-    public BookResponse updateBook(Long bookId, BookRequest request, String username) {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-
-        Book book = bookRepository.findByIdAndUserId(bookId, user.getId())
-                .orElseThrow(() -> new BookNotFoundException("Book not found"));
-
-        if (!book.getUser().getId().equals(user.getId())) {
-            throw new AccessDeniedBookOperationException("You cannot update this book");
-        }
-
-        if (request.title() != null) book.setTitle(request.title());
-        if (request.description() != null) book.setDescription(request.description());
-        if (request.year() != null) book.setYear(request.year());
-        if (request.author() != null) book.setAuthor(request.author());
-
-        return toResponse(bookRepository.save(book));
-    }
-
-    public void deleteBook(Long bookId, String username) {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new BookNotFoundException("Book not found"));
-
-        if (!book.getUser().getId().equals(user.getId())) {
-            throw new AccessDeniedBookOperationException("You cannot delete this book");
-        }
-
-        bookRepository.delete(book);
     }
 }

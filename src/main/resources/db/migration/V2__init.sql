@@ -26,5 +26,6 @@ CREATE TABLE IF NOT EXISTS reading (
                                        status VARCHAR(20) NOT NULL,
                                        score INT,
                                        finished_at TIMESTAMP,
-                                       notes TEXT
+                                       notes TEXT,
+                                       current_page INT
 );
