@@ -9,33 +9,46 @@ import org.example.exlibris.book.entity.Book;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Table(
+        name = "reading",
+        indexes = {
+                @Index(name = "idx_reading_user_id", columnList = "user_id"),
+                @Index(name = "idx_reading_user_status", columnList = "user_id,status")
+        }
+)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "reading")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ReadingEntry {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ReadingStatus status;
 
     private Integer score;
 
+    @Column(name = "current_page")
+    private Integer currentPage;
+
     @Column(name = "finished_at")
     private LocalDateTime finishedAt;
 
+    @Column(length = 2000)
     private String notes;
-
-    private Integer currentPage;
 }

@@ -1,20 +1,17 @@
 package org.example.exlibris.reading.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.example.exlibris.book.dto.BookResponse;
 import org.example.exlibris.reading.enums.ReadingStatus;
 
 import java.time.LocalDateTime;
 
-@Data
-@AllArgsConstructor
-public class ReadingResponse {
-    private Long id;
-    private BookResponse book;
-    private ReadingStatus status;
-    private Integer score;
-    private LocalDateTime finishedAt;
-    private String notes;
-    private Integer currentPage;
+public record ReadingResponse(
+        Long id,
+        BookResponse book,
+        ReadingStatus status,
+        Integer score,
+        Integer currentPage,
+        LocalDateTime finishedAt,
+        String notes
+) {
 }
