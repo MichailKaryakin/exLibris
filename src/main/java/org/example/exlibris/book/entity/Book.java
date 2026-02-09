@@ -38,7 +38,7 @@ public class Book {
 
     private Integer year;
 
-    @Column(name = "total_pages")
+    @Column(name = "total_pages", nullable = false)
     private Integer totalPages;
 
     @Column(length = 2000)

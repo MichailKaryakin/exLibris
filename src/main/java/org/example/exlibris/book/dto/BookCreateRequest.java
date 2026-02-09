@@ -19,6 +19,7 @@ public record BookCreateRequest(
         @Size(max = 2000)
         String description,
 
+        @NotNull
         @Min(1)
         Integer totalPages
 ) {

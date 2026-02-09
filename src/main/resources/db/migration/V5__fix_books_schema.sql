@@ -1,0 +1,1 @@
+ALTER TABLE books ALTER COLUMN total_pages SET NOT NULL;
