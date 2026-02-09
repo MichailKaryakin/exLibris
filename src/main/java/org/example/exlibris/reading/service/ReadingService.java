@@ -125,10 +125,8 @@ public class ReadingService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    private ReadingResponse toResponse(ReadingEntry entry) {
-        Book book = entry.getBook();
-
-        BookResponse bookResponse = new BookResponse(
+    private BookResponse toBookResponse(Book book) {
+        return new BookResponse(
                 book.getId(),
                 book.getTitle(),
                 book.getAuthor(),
@@ -136,13 +134,24 @@ public class ReadingService {
                 book.getTotalPages(),
                 book.getDescription()
         );
+    }
+
+    private ReadingResponse toResponse(ReadingEntry entry) {
+        Book book = entry.getBook();
+
+        double percentage = 0.0;
+        if (book.getTotalPages() > 0) {
+            percentage = (double) entry.getCurrentPage() / book.getTotalPages() * 100;
+            percentage = Math.round(percentage * 10.0) / 10.0;
+        }
 
         return new ReadingResponse(
                 entry.getId(),
-                bookResponse,
+                toBookResponse(book),
                 entry.getStatus(),
                 entry.getScore(),
                 entry.getCurrentPage(),
+                percentage,
                 entry.getFinishedAt(),
                 entry.getNotes()
         );

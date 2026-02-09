@@ -11,6 +11,7 @@ public record ReadingResponse(
         ReadingStatus status,
         Integer score,
         Integer currentPage,
+        Double progressPercentage,
         LocalDateTime finishedAt,
         String notes
 ) {
