@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.exlibris.book.dto.BookResponse;
 import org.example.exlibris.book.entity.Book;
+import org.example.exlibris.book.exception.BookNotFoundException;
 import org.example.exlibris.book.repository.BookRepository;
 import org.example.exlibris.reading.dto.FinishReadingRequest;
 import org.example.exlibris.reading.dto.ReadingResponse;
@@ -11,6 +12,8 @@ import org.example.exlibris.reading.dto.StartReadingRequest;
 import org.example.exlibris.reading.dto.UpdateProgressRequest;
 import org.example.exlibris.reading.entity.ReadingEntry;
 import org.example.exlibris.reading.enums.ReadingStatus;
+import org.example.exlibris.reading.exception.ReadingNotFoundException;
+import org.example.exlibris.reading.exception.ReadingStateException;
 import org.example.exlibris.reading.repository.ReadingRepository;
 import org.example.exlibris.user.entity.User;
 import org.example.exlibris.user.repository.UserRepository;
@@ -33,14 +36,14 @@ public class ReadingService {
         User user = getUser(email);
 
         Book book = bookRepo.findByIdAndUserId(request.bookId(), user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Book not found"));
+                .orElseThrow(() -> new BookNotFoundException("Book not found"));
 
         if (readingRepo.existsByUserIdAndBookIdAndStatus(
                 user.getId(),
                 book.getId(),
                 ReadingStatus.READING
         )) {
-            throw new IllegalStateException("Book is already being read");
+            throw new ReadingStateException("Book is already being read");
         }
 
         ReadingEntry entry = ReadingEntry.builder()
@@ -73,15 +76,22 @@ public class ReadingService {
         User user = getUser(email);
 
         ReadingEntry entry = readingRepo.findByIdAndUserId(readingId, user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Reading entry not found"));
+                .orElseThrow(() -> new ReadingNotFoundException("Reading entry not found"));
 
         if (entry.getStatus() != ReadingStatus.READING) {
-            throw new IllegalStateException("Cannot update progress for finished reading");
+            throw new ReadingStateException("Cannot update progress for finished reading");
         }
 
         int maxPages = entry.getBook().getTotalPages();
-        if (maxPages != 0 && request.currentPage() > maxPages) {
-            throw new IllegalArgumentException("Page exceeds total pages");
+
+        if (request.currentPage() < 0) {
+            throw new ReadingStateException("Current page cannot be negative");
+        }
+
+        if (maxPages > 0 && request.currentPage() > maxPages) {
+            throw new ReadingStateException(
+                    "Current page cannot exceed total pages of the book"
+            );
         }
 
         entry.setCurrentPage(request.currentPage());
@@ -96,10 +106,10 @@ public class ReadingService {
         User user = getUser(email);
 
         ReadingEntry entry = readingRepo.findByIdAndUserId(readingId, user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Reading entry not found"));
+                .orElseThrow(() -> new ReadingNotFoundException("Reading entry not found"));
 
-        if (entry.getStatus() != ReadingStatus.READING) {
-            throw new IllegalStateException("Reading already finished");
+        if (entry.getStatus() == ReadingStatus.FINISHED) {
+            throw new ReadingStateException("Reading already finished");
         }
 
         entry.setStatus(ReadingStatus.FINISHED);
