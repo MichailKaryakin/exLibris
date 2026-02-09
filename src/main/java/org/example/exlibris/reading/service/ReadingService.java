@@ -112,7 +112,7 @@ public class ReadingService {
             throw new ReadingStateException("Reading already finished");
         }
 
-        entry.setStatus(ReadingStatus.FINISHED);
+        entry.setStatus(request.abandon() == true ? ReadingStatus.ABANDONED : ReadingStatus.FINISHED);
         entry.setScore(request.score());
         entry.setNotes(request.notes());
         entry.setFinishedAt(LocalDateTime.now());

@@ -12,6 +12,9 @@ public record FinishReadingRequest(
         Integer score,
 
         @Size(max = 2000)
-        String notes
+        String notes,
+
+        @NotNull
+        Boolean abandon
 ) {
 }
