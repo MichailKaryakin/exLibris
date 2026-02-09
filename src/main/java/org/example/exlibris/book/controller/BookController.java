@@ -46,6 +46,11 @@ public class BookController {
         );
     }
 
+    @GetMapping("/{id}")
+    public BookResponse getById(@PathVariable Long id, Principal principal) {
+        return bookService.getById(id, principal.getName());
+    }
+
     @PutMapping("/{id}")
     public BookResponse update(
             @PathVariable Long id,

@@ -8,10 +8,12 @@ import org.example.exlibris.book.dto.BookUpdateRequest;
 import org.example.exlibris.book.entity.Book;
 import org.example.exlibris.book.exception.BookNotFoundException;
 import org.example.exlibris.book.repository.BookRepository;
+import org.example.exlibris.book.repository.BookSpecifications;
 import org.example.exlibris.user.entity.User;
 import org.example.exlibris.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -46,19 +48,20 @@ public class BookService {
     ) {
         User user = getUser(username);
 
-        Page<Book> books;
+        Specification<Book> spec = Specification.where(BookSpecifications.hasUserId(user.getId()))
+                .and(BookSpecifications.titleContains(title))
+                .and(BookSpecifications.authorContains(author));
 
-        if (title != null) {
-            books = bookRepository.findAllByUserIdAndTitleContainingIgnoreCase(
-                    user.getId(), title, pageable);
-        } else if (author != null) {
-            books = bookRepository.findAllByUserIdAndAuthorContainingIgnoreCase(
-                    user.getId(), author, pageable);
-        } else {
-            books = bookRepository.findAllByUserId(user.getId(), pageable);
-        }
+        return bookRepository.findAll(spec, pageable)
+                .map(this::toResponse);
+    }
 
-        return books.map(this::toResponse);
+    public BookResponse getById(Long bookId, String username) {
+        User user = getUser(username);
+
+        return bookRepository.findByIdAndUserId(bookId, user.getId())
+                .map(this::toResponse)
+                .orElseThrow(() -> new BookNotFoundException("Book with id " + bookId + " not found"));
     }
 
     public BookResponse update(
