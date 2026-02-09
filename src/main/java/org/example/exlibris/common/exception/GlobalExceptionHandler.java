@@ -1,5 +1,6 @@
 package org.example.exlibris.common.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.exlibris.book.exception.AccessDeniedBookOperationException;
 import org.example.exlibris.book.exception.BookNotFoundException;
 import org.example.exlibris.common.dto.ErrorResponse;
@@ -15,14 +16,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private ErrorResponse body(int status, String error, String message) {
+    private ErrorResponse createBody(HttpStatus status, String error, String message) {
         return new ErrorResponse(
                 LocalDateTime.now(),
-                status,
+                status.value(),
                 error,
                 message
         );
@@ -34,21 +37,21 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleEmailExists(EmailAlreadyUsedException e) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(body(409, "EMAIL_ALREADY_USED", e.getMessage()));
+                .body(createBody(HttpStatus.CONFLICT, "EMAIL_ALREADY_USED", e.getMessage()));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials() {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(body(401, "BAD_CREDENTIALS", "Invalid email or password"));
+                .body(createBody(HttpStatus.UNAUTHORIZED, "BAD_CREDENTIALS", "Invalid email or password"));
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(UsernameNotFoundException e) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(body(404, "USER_NOT_FOUND", e.getMessage()));
+                .body(createBody(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", e.getMessage()));
     }
 
     // ========== BOOK ==========
@@ -57,62 +60,55 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBookNotFound(BookNotFoundException e) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(body(404, "BOOK_NOT_FOUND", e.getMessage()));
+                .body(createBody(HttpStatus.NOT_FOUND, "BOOK_NOT_FOUND", e.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedBookOperationException.class)
-    public ResponseEntity<ErrorResponse> handleBookAccessDenied(
-            AccessDeniedBookOperationException e
-    ) {
+    public ResponseEntity<ErrorResponse> handleBookAccessDenied(AccessDeniedBookOperationException e) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(body(403, "BOOK_ACCESS_DENIED", e.getMessage()));
+                .body(createBody(HttpStatus.FORBIDDEN, "BOOK_ACCESS_DENIED", e.getMessage()));
     }
 
     // ========== READING ==========
 
     @ExceptionHandler(ReadingNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleReadingNotFound(
-            ReadingNotFoundException e
-    ) {
+    public ResponseEntity<ErrorResponse> handleReadingNotFound(ReadingNotFoundException e) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(body(404, "READING_NOT_FOUND", e.getMessage()));
+                .body(createBody(HttpStatus.NOT_FOUND, "READING_NOT_FOUND", e.getMessage()));
     }
 
     @ExceptionHandler(ReadingStateException.class)
-    public ResponseEntity<ErrorResponse> handleReadingState(
-            ReadingStateException e
-    ) {
+    public ResponseEntity<ErrorResponse> handleReadingState(ReadingStateException e) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(body(409, "READING_STATE_ERROR", e.getMessage()));
+                .body(createBody(HttpStatus.CONFLICT, "READING_STATE_ERROR", e.getMessage()));
     }
 
     // ========== VALIDATION ==========
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(
-            MethodArgumentNotValidException e
-    ) {
-        String msg = e.getBindingResult()
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
+        String errors = e.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .findFirst()
-                .orElse("Validation failed");
+                .collect(Collectors.joining("; "));
 
         return ResponseEntity
                 .badRequest()
-                .body(body(400, "VALIDATION_ERROR", msg));
+                .body(createBody(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", errors));
     }
 
     // ========== FALLBACK ==========
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> fallback() {
+    public ResponseEntity<ErrorResponse> fallback(Exception e) {
+        log.error("Unhandled exception caught: ", e);
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(body(500, "INTERNAL_ERROR", "Internal server error"));
+                .body(createBody(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "An unexpected error occurred"));
     }
 }
