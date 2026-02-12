@@ -1,8 +1,9 @@
 package org.example.exlibris.user.dto;
 
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
 
-@Data
-public class RefreshRequest {
-    private String refreshToken;
+public record RefreshRequest(
+
+        @NotBlank String refreshToken
+) {
 }

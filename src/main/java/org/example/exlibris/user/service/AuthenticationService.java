@@ -1,6 +1,8 @@
 package org.example.exlibris.user.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.exlibris.security.exception.JwtAuthenticationException;
 import org.example.exlibris.security.jwt.JwtService;
 import org.example.exlibris.security.userdetails.CustomUserDetailsService;
 import org.example.exlibris.user.dto.*;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AuthenticationService {
     private final UserRepository repo;
     private final PasswordEncoder encoder;
@@ -24,52 +27,45 @@ public class AuthenticationService {
     private final CustomUserDetailsService userDetailsService;
 
     public RegisterResponse register(RegisterRequest request) {
-        if (repo.existsByEmail(request.getEmail())) {
+        if (repo.existsByEmail(request.email())) {
             throw new EmailAlreadyUsedException();
         }
 
         User user = User.builder()
-                .email(request.getEmail())
-                .password(encoder.encode(request.getPassword()))
+                .email(request.email())
+                .password(encoder.encode(request.password()))
                 .role(Role.USER)
-                .createdAt(java.time.LocalDateTime.now())
                 .build();
 
         repo.save(user);
 
-        return RegisterResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .build();
+        return new RegisterResponse(user.getId(), user.getEmail());
     }
 
     public LoginResponse login(LoginRequest request) {
         authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(), request.getPassword()
-                )
+                new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
-        UserDetails user = userDetailsService.loadUserByUsername(request.getEmail());
+        UserDetails user = userDetailsService.loadUserByUsername(request.email());
 
-        return LoginResponse.builder()
-                .accessToken(jwtService.generateToken(user))
-                .refreshToken(jwtService.generateRefreshToken(user))
-                .build();
+        return new LoginResponse(
+                jwtService.generateToken(user),
+                jwtService.generateRefreshToken(user)
+        );
     }
 
-    public RefreshResponse refresh(String refreshToken) {
+    public LoginResponse refresh(String refreshToken) {
         String email = jwtService.extractUsername(refreshToken);
         UserDetails user = userDetailsService.loadUserByUsername(email);
 
         if (!jwtService.isRefreshTokenValid(refreshToken, user)) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new JwtAuthenticationException("Invalid or expired refresh token");
         }
 
-        String newAccess = jwtService.generateToken(user);
-
-        return RefreshResponse.builder()
-                .accessToken(newAccess)
-                .build();
+        return new LoginResponse(
+                jwtService.generateToken(user),
+                jwtService.generateRefreshToken(user)
+        );
     }
 }

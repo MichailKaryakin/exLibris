@@ -27,5 +27,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(updatable = false)
+    @org.hibernate.annotations.CreationTimestamp
     private LocalDateTime createdAt;
 }

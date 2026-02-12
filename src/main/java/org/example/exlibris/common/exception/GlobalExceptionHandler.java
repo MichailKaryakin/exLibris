@@ -1,11 +1,13 @@
 package org.example.exlibris.common.exception;
 
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.exlibris.book.exception.AccessDeniedBookOperationException;
 import org.example.exlibris.book.exception.BookNotFoundException;
 import org.example.exlibris.common.dto.ErrorResponse;
 import org.example.exlibris.reading.exception.ReadingNotFoundException;
 import org.example.exlibris.reading.exception.ReadingStateException;
+import org.example.exlibris.security.exception.JwtAuthenticationException;
 import org.example.exlibris.user.exception.EmailAlreadyUsedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +54,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(createBody(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", e.getMessage()));
+    }
+
+    // ========== SECURITY ==========
+
+    @ExceptionHandler({JwtException.class, JwtAuthenticationException.class})
+    public ResponseEntity<ErrorResponse> handleJwtError(io.jsonwebtoken.JwtException e) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(createBody(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", e.getMessage()));
     }
 
     // ========== BOOK ==========

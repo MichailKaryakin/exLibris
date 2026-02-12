@@ -27,6 +27,7 @@ public class JwtService {
 
     public String generateToken(UserDetails user) {
         return Jwts.builder()
+                .setClaims(Map.of("type", "ACCESS"))
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 60 * 60 * 1000))
@@ -36,14 +37,19 @@ public class JwtService {
 
     public String generateRefreshToken(UserDetails user) {
         return Jwts.builder()
+                .setClaims(Map.of("type", "REFRESH"))
                 .setSubject(user.getUsername())
-                .setExpiration(new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000))
                 .signWith(key)
                 .compact();
     }
 
     public boolean isRefreshTokenValid(String token, UserDetails user) {
-        return extractUsername(token).equals(user.getUsername()) && isNotExpired(token);
+        Claims claims = extractAllClaims(token);
+        return claims.getSubject().equals(user.getUsername())
+                && "REFRESH".equals(claims.get("type"))
+                && !claims.getExpiration().before(new Date());
     }
 
     public boolean isTokenValid(String token, UserDetails user) {
