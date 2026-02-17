@@ -6,6 +6,8 @@ public record BookResponse(
         String author,
         Integer year,
         Integer totalPages,
-        String description
+        String description,
+        String isbn,
+        String series
 ) {
 }

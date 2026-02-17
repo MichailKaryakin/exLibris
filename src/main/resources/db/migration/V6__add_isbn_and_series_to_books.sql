@@ -1,0 +1,5 @@
+ALTER TABLE books
+    ADD COLUMN isbn VARCHAR(20);
+
+ALTER TABLE books
+    ADD COLUMN series VARCHAR(255);

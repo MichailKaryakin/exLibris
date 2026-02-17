@@ -25,6 +25,11 @@ public class BookService {
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
 
+    private String normalizeIsbn(String isbn) {
+        if (isbn == null) return null;
+        return isbn.replaceAll("-", "").trim();
+    }
+
     public BookResponse create(BookCreateRequest request, String username) {
         User user = getUser(username);
 
@@ -34,6 +39,8 @@ public class BookService {
                 .year(request.year())
                 .totalPages(request.totalPages())
                 .description(request.description())
+                .isbn(normalizeIsbn(request.isbn()))
+                .series(request.series())
                 .user(user)
                 .build();
 
@@ -79,6 +86,8 @@ public class BookService {
         if (request.year() != null) book.setYear(request.year());
         if (request.totalPages() != null) book.setTotalPages(request.totalPages());
         if (request.description() != null) book.setDescription(request.description());
+        if (request.isbn() != null) book.setIsbn(normalizeIsbn(request.isbn()));
+        if (request.series() != null) book.setSeries(request.series());
 
         return toResponse(book);
     }
@@ -105,7 +114,9 @@ public class BookService {
                 book.getAuthor(),
                 book.getYear(),
                 book.getTotalPages(),
-                book.getDescription()
+                book.getDescription(),
+                book.getIsbn(),
+                book.getSeries()
         );
     }
 }

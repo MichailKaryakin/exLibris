@@ -44,6 +44,11 @@ public class Book {
     @Column(length = 2000)
     private String description;
 
+    @Column(length = 20)
+    private String isbn;
+
+    private String series;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
