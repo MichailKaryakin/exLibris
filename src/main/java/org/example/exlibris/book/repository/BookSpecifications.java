@@ -18,4 +18,11 @@ public class BookSpecifications {
         return (root, query, cb) -> author == null ? null :
                 cb.like(cb.lower(root.get("author")), "%" + author.toLowerCase() + "%");
     }
+
+    public static Specification<Book> seriesContains(String series) {
+        return (root, query, cb) ->
+                series == null ? null :
+                        cb.like(cb.lower(root.get("series")),
+                                "%" + series.toLowerCase() + "%");
+    }
 }

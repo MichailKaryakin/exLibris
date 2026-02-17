@@ -3,6 +3,7 @@ package org.example.exlibris.book.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.exlibris.book.dto.BookCreateRequest;
+import org.example.exlibris.book.dto.BookRequest;
 import org.example.exlibris.book.dto.BookResponse;
 import org.example.exlibris.book.dto.BookUpdateRequest;
 import org.example.exlibris.book.entity.Book;
@@ -49,15 +50,15 @@ public class BookService {
 
     public Page<BookResponse> getAll(
             String username,
-            String title,
-            String author,
+            BookRequest request,
             Pageable pageable
     ) {
         User user = getUser(username);
 
         Specification<Book> spec = Specification.where(BookSpecifications.hasUserId(user.getId()))
-                .and(BookSpecifications.titleContains(title))
-                .and(BookSpecifications.authorContains(author));
+                        .and(BookSpecifications.titleContains(request.title()))
+                        .and(BookSpecifications.authorContains(request.author()))
+                        .and(BookSpecifications.seriesContains(request.series()));
 
         return bookRepository.findAll(spec, pageable)
                 .map(this::toResponse);

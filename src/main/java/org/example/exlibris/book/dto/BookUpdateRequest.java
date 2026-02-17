@@ -18,7 +18,7 @@ public record BookUpdateRequest(
         String description,
 
         @Pattern(
-                regexp = "^(97([89]))?\\d{9}(\\d|X)$",
+                regexp = "^(97[89])?\\d{9}(\\d|X)$",
                 message = "Invalid ISBN format"
         )
         @Size(max = 20)

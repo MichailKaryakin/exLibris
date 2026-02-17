@@ -3,6 +3,7 @@ package org.example.exlibris.book.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.exlibris.book.dto.BookCreateRequest;
+import org.example.exlibris.book.dto.BookRequest;
 import org.example.exlibris.book.dto.BookResponse;
 import org.example.exlibris.book.dto.BookUpdateRequest;
 import org.example.exlibris.book.service.BookService;
@@ -33,15 +34,13 @@ public class BookController {
 
     @GetMapping
     public Page<BookResponse> getAll(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String author,
+            @Valid BookRequest request,
             Pageable pageable,
             Principal principal
     ) {
         return bookService.getAll(
                 principal.getName(),
-                title,
-                author,
+                request,
                 pageable
         );
     }
