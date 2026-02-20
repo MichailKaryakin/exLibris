@@ -9,6 +9,7 @@ import org.example.exlibris.reading.exception.ReadingNotFoundException;
 import org.example.exlibris.reading.exception.ReadingStateException;
 import org.example.exlibris.security.exception.JwtAuthenticationException;
 import org.example.exlibris.user.exception.EmailAlreadyUsedException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -79,6 +80,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(createBody(HttpStatus.FORBIDDEN, "BOOK_ACCESS_DENIED", e.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+
+        String message = "Data integrity violation";
+
+        if (e.getMessage() != null && e.getMessage().contains("uk_books_user_isbn")) {
+            message = "Book with this ISBN already exists";
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(createBody(HttpStatus.CONFLICT, "BOOK_ISBN_ALREADY_EXISTS", message));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(createBody(HttpStatus.CONFLICT, "DATA_INTEGRITY_VIOLATION", message));
     }
 
     // ========== READING ==========

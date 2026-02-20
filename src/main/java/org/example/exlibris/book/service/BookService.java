@@ -56,9 +56,9 @@ public class BookService {
         User user = getUser(username);
 
         Specification<Book> spec = Specification.where(BookSpecifications.hasUserId(user.getId()))
-                        .and(BookSpecifications.titleContains(request.title()))
-                        .and(BookSpecifications.authorContains(request.author()))
-                        .and(BookSpecifications.seriesContains(request.series()));
+                .and(BookSpecifications.titleContains(request.title()))
+                .and(BookSpecifications.authorContains(request.author()))
+                .and(BookSpecifications.seriesContains(request.series()));
 
         return bookRepository.findAll(spec, pageable)
                 .map(this::toResponse);
@@ -70,6 +70,26 @@ public class BookService {
         return bookRepository.findByIdAndUserId(bookId, user.getId())
                 .map(this::toResponse)
                 .orElseThrow(() -> new BookNotFoundException("Book with id " + bookId + " not found"));
+    }
+
+    public String getCover(String isbn, String username) {
+        User user = getUser(username);
+
+        String normalizedIsbn = normalizeIsbn(isbn);
+
+        bookRepository.findByIsbnAndUserId(normalizedIsbn, user.getId())
+                .orElseThrow(() -> new BookNotFoundException("Book with isbn " + isbn + " not found"));
+
+        return "https://covers.openlibrary.org/b/isbn/" + normalizedIsbn + "-L.jpg";
+    }
+
+    public BookResponse getByIsbn(String isbn, String username) {
+        User user = getUser(username);
+        String normalizedIsbn = normalizeIsbn(isbn);
+
+        return bookRepository.findByIsbnAndUserId(normalizedIsbn, user.getId())
+                .map(this::toResponse)
+                .orElseThrow(() -> new BookNotFoundException("Book with isbn " + normalizedIsbn + " not found"));
     }
 
     public BookResponse update(

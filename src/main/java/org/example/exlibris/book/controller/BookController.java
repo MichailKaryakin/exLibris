@@ -10,9 +10,11 @@ import org.example.exlibris.book.service.BookService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.security.Principal;
 
 @RestController
@@ -48,6 +50,21 @@ public class BookController {
     @GetMapping("/{id}")
     public BookResponse getById(@PathVariable Long id, Principal principal) {
         return bookService.getById(id, principal.getName());
+    }
+
+    @GetMapping("/isbn/{isbn}/cover")
+    public ResponseEntity<Void> getCover(@PathVariable String isbn, Principal principal) {
+        String url = bookService.getCover(isbn, principal.getName());
+
+        return ResponseEntity
+                .status(HttpStatus.FOUND)
+                .location(URI.create(url))
+                .build();
+    }
+
+    @GetMapping("/isbn/{isbn}")
+    public BookResponse getByIsbn(@PathVariable String isbn, Principal principal) {
+        return bookService.getByIsbn(isbn, principal.getName());
     }
 
     @PutMapping("/{id}")
