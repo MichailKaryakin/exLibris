@@ -2,10 +2,7 @@ package org.example.exlibris.reading.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.exlibris.reading.dto.FinishReadingRequest;
-import org.example.exlibris.reading.dto.ReadingResponse;
-import org.example.exlibris.reading.dto.StartReadingRequest;
-import org.example.exlibris.reading.dto.UpdateProgressRequest;
+import org.example.exlibris.reading.dto.*;
 import org.example.exlibris.reading.enums.ReadingStatus;
 import org.example.exlibris.reading.service.ReadingService;
 import org.springframework.http.HttpStatus;
@@ -23,14 +20,6 @@ public class ReadingController {
 
     private final ReadingService service;
 
-    @GetMapping
-    public List<ReadingResponse> getAll(
-            @RequestParam(required = false) ReadingStatus status,
-            Principal principal
-    ) {
-        return service.getAll(principal.getName(), status);
-    }
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ReadingResponse start(
@@ -40,6 +29,24 @@ public class ReadingController {
         return service.start(request, principal.getName());
     }
 
+    @GetMapping("/stats")
+    public ReadingStatsResponse getStats(Principal principal) {
+        return service.getUserStats(principal.getName());
+    }
+
+    @GetMapping
+    public List<ReadingResponse> getAll(
+            @RequestParam(required = false) ReadingStatus status,
+            Principal principal
+    ) {
+        return service.getAll(principal.getName(), status);
+    }
+
+    @GetMapping("/{id}")
+    public ReadingResponse getById(@PathVariable Long id, Principal principal) {
+        return service.getById(id, principal.getName());
+    }
+
     @PatchMapping("/{id}")
     public ReadingResponse updateProgress(
             @PathVariable Long id,
@@ -47,6 +54,12 @@ public class ReadingController {
             Principal principal
     ) {
         return service.updateProgress(id, request, principal.getName());
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id, Principal principal) {
+        service.delete(id, principal.getName());
     }
 
     @PostMapping("/{id}/finish")

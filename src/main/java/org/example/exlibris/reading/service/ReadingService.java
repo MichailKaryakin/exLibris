@@ -6,10 +6,7 @@ import org.example.exlibris.book.dto.BookResponse;
 import org.example.exlibris.book.entity.Book;
 import org.example.exlibris.book.exception.BookNotFoundException;
 import org.example.exlibris.book.repository.BookRepository;
-import org.example.exlibris.reading.dto.FinishReadingRequest;
-import org.example.exlibris.reading.dto.ReadingResponse;
-import org.example.exlibris.reading.dto.StartReadingRequest;
-import org.example.exlibris.reading.dto.UpdateProgressRequest;
+import org.example.exlibris.reading.dto.*;
 import org.example.exlibris.reading.entity.ReadingEntry;
 import org.example.exlibris.reading.enums.ReadingStatus;
 import org.example.exlibris.reading.exception.ReadingNotFoundException;
@@ -56,6 +53,44 @@ public class ReadingService {
         return toResponse(readingRepo.save(entry));
     }
 
+    public ReadingStatsResponse getUserStats(String email) {
+        User user = getUser(email);
+        List<ReadingEntry> entries = readingRepo.findAllByUserId(user.getId());
+
+        long inProgress = 0;
+        long finished = 0;
+        long abandoned = 0;
+        int totalPages = 0;
+        double sumScore = 0;
+        int scoredBooksCount = 0;
+
+        for (ReadingEntry entry : entries) {
+            totalPages += entry.getCurrentPage();
+
+            switch (entry.getStatus()) {
+                case READING -> inProgress++;
+                case FINISHED -> {
+                    finished++;
+                    if (entry.getScore() != null && entry.getScore() > 0) {
+                        sumScore += entry.getScore();
+                        scoredBooksCount++;
+                    }
+                }
+                case ABANDONED -> abandoned++;
+            }
+        }
+
+        double avgScore = scoredBooksCount > 0 ? Math.round((sumScore / scoredBooksCount) * 10.0) / 10.0 : 0.0;
+
+        return new ReadingStatsResponse(
+                inProgress,
+                finished,
+                abandoned,
+                totalPages,
+                avgScore
+        );
+    }
+
     public List<ReadingResponse> getAll(String email, ReadingStatus status) {
         User user = getUser(email);
 
@@ -66,6 +101,21 @@ public class ReadingService {
         return entries.stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public ReadingResponse getById(Long id, String email) {
+        User user = getUser(email);
+        ReadingEntry entry = readingRepo.findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new ReadingNotFoundException("Reading entry not found"));
+        return toResponse(entry);
+    }
+
+    public void delete(Long id, String email) {
+        User user = getUser(email);
+        ReadingEntry entry = readingRepo.findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new ReadingNotFoundException("Reading entry not found"));
+
+        readingRepo.delete(entry);
     }
 
     public ReadingResponse updateProgress(
