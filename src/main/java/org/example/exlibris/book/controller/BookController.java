@@ -53,8 +53,8 @@ public class BookController {
     }
 
     @GetMapping("/isbn/{isbn}/cover")
-    public ResponseEntity<Void> getCover(@PathVariable String isbn, Principal principal) {
-        String url = bookService.getCover(isbn, principal.getName());
+    public ResponseEntity<Void> getCover(@PathVariable String isbn) {
+        String url = bookService.getCover(isbn);
 
         return ResponseEntity
                 .status(HttpStatus.FOUND)

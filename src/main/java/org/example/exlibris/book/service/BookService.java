@@ -72,15 +72,10 @@ public class BookService {
                 .orElseThrow(() -> new BookNotFoundException("Book with id " + bookId + " not found"));
     }
 
-    public String getCover(String isbn, String username) {
-        User user = getUser(username);
-
+    public String getCover(String isbn) {
         String normalizedIsbn = normalizeIsbn(isbn);
 
-        bookRepository.findByIsbnAndUserId(normalizedIsbn, user.getId())
-                .orElseThrow(() -> new BookNotFoundException("Book with isbn " + isbn + " not found"));
-
-        return "https://covers.openlibrary.org/b/isbn/" + normalizedIsbn + "-L.jpg";
+        return "https://books.google.com/books/content?vid=ISBN:" + normalizedIsbn + "&printsec=frontcover&img=1&zoom=1";
     }
 
     public BookResponse getByIsbn(String isbn, String username) {
