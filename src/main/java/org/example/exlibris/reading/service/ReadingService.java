@@ -1,5 +1,6 @@
 package org.example.exlibris.reading.service;
 
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.exlibris.book.dto.BookResponse;
@@ -14,10 +15,14 @@ import org.example.exlibris.reading.exception.ReadingStateException;
 import org.example.exlibris.reading.repository.ReadingRepository;
 import org.example.exlibris.user.entity.User;
 import org.example.exlibris.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -107,16 +112,17 @@ public class ReadingService {
         );
     }
 
-    public List<ReadingResponse> getAll(String email, ReadingStatus status) {
+    public Page<ReadingResponse> getAll(
+            String email,
+            ReadingStatus status,
+            String query,
+            Pageable pageable
+    ) {
         User user = getUser(email);
+        Specification<ReadingEntry> spec = createSpecification(user.getId(), status, query);
 
-        List<ReadingEntry> entries = (status == null)
-                ? readingRepo.findAllByUserId(user.getId())
-                : readingRepo.findAllByUserIdAndStatus(user.getId(), status);
-
-        return entries.stream()
-                .map(this::toResponse)
-                .toList();
+        return readingRepo.findAll(spec, pageable)
+                .map(this::toResponse);
     }
 
     public ReadingResponse getById(Long id, String email) {
@@ -223,5 +229,38 @@ public class ReadingService {
                 entry.getFinishedAt(),
                 entry.getNotes()
         );
+    }
+
+    private Specification<ReadingEntry> createSpecification(
+            Long userId,
+            ReadingStatus status,
+            String query
+    ) {
+        return (root, cq, cb) -> {
+            if (cq.getResultType() != Long.class && cq.getResultType() != long.class) {
+                root.fetch("book");
+            }
+
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(cb.equal(root.get("user").get("id"), userId));
+
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (query != null && !query.isBlank()) {
+                String pattern = "%" + query.toLowerCase() + "%";
+
+                var bookJoin = root.get("book");
+
+                Predicate titleMatch = cb.like(cb.lower(bookJoin.get("title")), pattern);
+                Predicate authorMatch = cb.like(cb.lower(bookJoin.get("author")), pattern);
+
+                predicates.add(cb.or(titleMatch, authorMatch));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }

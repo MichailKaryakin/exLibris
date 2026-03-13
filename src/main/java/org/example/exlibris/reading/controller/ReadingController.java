@@ -5,12 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.example.exlibris.reading.dto.*;
 import org.example.exlibris.reading.enums.ReadingStatus;
 import org.example.exlibris.reading.service.ReadingService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/reading")
@@ -35,11 +36,13 @@ public class ReadingController {
     }
 
     @GetMapping
-    public List<ReadingResponse> getAll(
+    public Page<ReadingResponse> getAll(
             @RequestParam(required = false) ReadingStatus status,
+            @RequestParam(required = false) String query,
+            Pageable pageable,
             Principal principal
     ) {
-        return service.getAll(principal.getName(), status);
+        return service.getAll(principal.getName(), status, query, pageable);
     }
 
     @GetMapping("/{id}")
