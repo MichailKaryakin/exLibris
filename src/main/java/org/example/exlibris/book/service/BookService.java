@@ -58,7 +58,8 @@ public class BookService {
         Specification<Book> spec = Specification.where(BookSpecifications.hasUserId(user.getId()))
                 .and(BookSpecifications.titleContains(request.title()))
                 .and(BookSpecifications.authorContains(request.author()))
-                .and(BookSpecifications.seriesContains(request.series()));
+                .and(BookSpecifications.seriesContains(request.series()))
+                .and(BookSpecifications.globalSearch(request.query()));
 
         return bookRepository.findAll(spec, pageable)
                 .map(this::toResponse);

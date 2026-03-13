@@ -61,7 +61,7 @@ public class ReadingService {
                 book.getId(),
                 ReadingStatus.FINISHED
         )) {
-            throw new ReadingStateException("Book was already finished");
+            throw new ReadingStateException("Book is already finished");
         }
 
         ReadingEntry entry = ReadingEntry.builder()

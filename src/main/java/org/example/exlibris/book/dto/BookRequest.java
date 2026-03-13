@@ -11,6 +11,9 @@ public record BookRequest(
         String author,
 
         @Size(max = 255)
-        String series
+        String series,
+
+        @Size(max = 255)
+        String query
 ) {
 }

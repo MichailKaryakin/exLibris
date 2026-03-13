@@ -25,4 +25,17 @@ public class BookSpecifications {
                         cb.like(cb.lower(root.get("series")),
                                 "%" + series.toLowerCase() + "%");
     }
+
+    public static Specification<Book> globalSearch(String query) {
+        return (root, cq, cb) -> {
+            if (query == null || query.isBlank()) return null;
+
+            String pattern = "%" + query.toLowerCase() + "%";
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("title")), pattern),
+                    cb.like(cb.lower(root.get("author")), pattern)
+            );
+        };
+    }
 }
