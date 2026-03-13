@@ -43,6 +43,22 @@ public class ReadingService {
             throw new ReadingStateException("Book is already being read");
         }
 
+        if (readingRepo.existsByUserIdAndBookIdAndStatus(
+                user.getId(),
+                book.getId(),
+                ReadingStatus.ABANDONED
+        )) {
+            throw new ReadingStateException("Book had already been read and abandoned");
+        }
+
+        if (readingRepo.existsByUserIdAndBookIdAndStatus(
+                user.getId(),
+                book.getId(),
+                ReadingStatus.FINISHED
+        )) {
+            throw new ReadingStateException("Book was already finished");
+        }
+
         ReadingEntry entry = ReadingEntry.builder()
                 .user(user)
                 .book(book)
