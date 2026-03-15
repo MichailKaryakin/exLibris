@@ -76,7 +76,7 @@ public class BookService {
     public String getCover(String isbn) {
         String normalizedIsbn = normalizeIsbn(isbn);
 
-        return "https://books.google.com/books/content?vid=ISBN:" + normalizedIsbn + "&printsec=frontcover&img=1&zoom=1";
+        return "https://covers.openlibrary.org/b/isbn/" + normalizedIsbn + "-L.jpg?default=false";
     }
 
     public BookResponse getByIsbn(String isbn, String username) {
